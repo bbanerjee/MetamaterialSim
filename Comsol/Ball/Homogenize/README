@@ -1,0 +1,7 @@
+In this directory, the homogenization model is explored.  
+Single - sets up the frequency dependent density.
+Stacks_Epx - only epoxy between the layers of resonators
+Stacks_Sil - silicone between layers of resonators
+HomoStack - Homogenized model with silicone separated stacks
+HomoDampStack - Damped version of HomoStack
+AnalyticStacks - Analytic ball and spring model

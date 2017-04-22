@@ -1,0 +1,229 @@
+!
+!  Model of RVE with coated ball
+!
+/filname, ModalTest1, 0
+/prep7
+!
+! Element types
+!
+!
+! Epoxy matrix
+!
+type_matrix = 3
+real_matrix = 3
+et, type_matrix, solid186   ! Expoxt matrix
+!et, type_matrix, solid185   ! Expoxt matrix
+keyopt, type_matrix, 2, 1   ! Full integration
+keyopt, type_matrix, 3, 0   ! Structural solid
+keyopt, type_matrix, 6, 0   ! Pure displacement formulation
+keyopt, type_matrix, 10, 0  ! No initial stress
+r, real_matrix
+!
+! Material parameters
+!
+! Epoxy matrix
+!
+mat_matrix = 3
+E_matrix = 4.35e9
+nu_matrix = 0.368
+rho_matrix = 1180
+mp, ex, mat_matrix, E_matrix
+mp, nuxy, mat_matrix, nu_matrix
+mp, dens, mat_matrix, rho_matrix
+!
+! Geometry parameters
+!
+panel_len = 23.0e-3
+panel_thick = 23.0e-3
+min_loc = -panel_len/2
+max_loc = panel_len/2
+!
+! Create nodes
+!
+n, 1, min_loc, min_loc, min_loc
+n, 2, max_loc, min_loc, min_loc
+n, 3, max_loc, max_loc, min_loc
+n, 4, min_loc, max_loc, min_loc
+n, 5, min_loc, min_loc, max_loc
+n, 6, max_loc, min_loc, max_loc
+n, 7, max_loc, max_loc, max_loc
+n, 8, min_loc, max_loc, max_loc
+n, 9, 0, min_loc, min_loc
+n, 10, max_loc, 0, min_loc
+n, 11, 0, max_loc, min_loc
+n, 12, min_loc, 0, min_loc
+n, 13, 0, min_loc, max_loc
+n, 14, max_loc, 0, max_loc
+n, 15, 0, max_loc, max_loc
+n, 16, min_loc, 0, max_loc
+n, 17, min_loc, min_loc, 0
+n, 18, max_loc, min_loc, 0
+n, 19, max_loc, max_loc, 0
+n, 20, min_loc, max_loc, 0
+!
+! Create element
+!
+type, type_matrix
+real, real_matrix
+mat, mat_matrix
+e, 1, 2, 3, 4, 5, 6, 7, 8
+emore, 9, 10, 11, 12, 13, 14, 15, 16
+emore, 17, 18, 19, 20
+finish
+!
+!  Harmonic analysis (mode superposition)
+!
+/solu
+freq = 1
+antype, harmic
+hropt, full, , , , 
+hrout, , , 
+nsubst, 1
+harfrq, freq, 
+!
+! Apply a force at the center of the face
+!
+d,,,support
+nsel, s, loc, z, min_loc
+f, all, fz, 1.0
+allsel
+save
+solve
+finish
+
+/post26 
+file, 'ModalTest1','rst',' '   
+!
+! Save the z-displacement at nodes 5, 6, 7, 8
+!
+numvar, 100, 
+nsol, 12, 5, u, z, uz_2 
+store
+nsol, 13, 6, u, z, uz_3 
+store   
+nsol, 14, 7, u, z, uz_4 
+store   
+nsol, 15, 8, u, z, uz_5 
+store   
+!
+! Write data to files
+!
+*del, _array
+*dim, _array, table, 1, 2
+vget, _array(1,0), 1, freq 
+vget, _array(1,1), 12, freq, 0 
+vget, _array(1,2), 12, freq, 1 
+*cfopen, ModalTest1, uz5, , 
+*vwrite, _array(1,0), _array(1,1), _array(1,2)  
+%14.5g %14.5g %14.5g
+*cfclos
+!
+*del, _array
+*dim, _array, table, 1, 2
+vget, _array(1,0), 1, freq 
+vget, _array(1,1), 13, freq, 0 
+vget, _array(1,2), 13, freq, 1 
+*cfopen, ModalTest1, uz6, , 
+*vwrite, _array(1,0), _array(1,1), _array(1,2)  
+%14.5g %14.5g %14.5g
+*cfclos
+!
+*del, _array
+*dim, _array, table, 1, 2
+vget, _array(1,0), 1, freq 
+vget, _array(1,1), 14, freq, 0 
+vget, _array(1,2), 14, freq, 1 
+*cfopen, ModalTest1, uz7, , 
+*vwrite, _array(1,0), _array(1,1), _array(1,2)  
+%14.5g %14.5g %14.5g
+*cfclos
+!
+*del, _array
+*dim, _array, table, 1, 2
+vget, _array(1,0), 1, freq 
+vget, _array(1,1), 15, freq, 0 
+vget, _array(1,2), 15, freq, 1 
+*cfopen, ModalTest1, uz8, , 
+*vwrite, _array(1,0), _array(1,1), _array(1,2)  
+%14.5g %14.5g %14.5g
+*cfclos
+finish
+!
+!  Loop through other frequencies
+!
+*do, ii, 1, 220
+  freq = ii*10
+
+  /solu
+  antype, harmic
+  hropt, full, , , , 
+  hrout, , , 
+  nsubst, 1
+  harfrq, freq
+  !
+  ! Apply a force at the center of the face
+  !
+  d,,,support
+  nsel, s, loc, z, min_loc
+  f, all, fz, 1.0
+  allsel
+  save
+  solve
+  finish
+  
+  /post26 
+  file, 'ModalTest1','rst',' '   
+  !
+  ! Save the z-displacement at nodes 5, 6, 7, 8
+  !
+  numvar, 100, 
+  nsol, 12, 5, u, z, uz_2 
+  nsol, 13, 6, u, z, uz_3 
+  nsol, 14, 7, u, z, uz_4 
+  nsol, 15, 8, u, z, uz_5 
+  store, appen
+  !
+  ! Write data to files
+  !
+  *del, _array
+  *dim, _array, table, 1, 2
+  vget, _array(1,0), 1, freq 
+  vget, _array(1,1), 12, freq, 0 
+  vget, _array(1,2), 12, freq, 1 
+  *cfopen, ModalTest1, uz5, , append
+  *vwrite, _array(1,0), _array(1,1), _array(1,2)  
+  %14.5g %14.5g %14.5g
+  *cfclos
+  !
+  *del, _array
+  *dim, _array, table, 1, 2
+  vget, _array(1,0), 1 
+  vget, _array(1,1), 13, freq, 0 
+  vget, _array(1,2), 13, freq, 1 
+  *cfopen, ModalTest1, uz6, , append
+  *vwrite, _array(1,0), _array(1,1), _array(1,2)  
+  %14.5g %14.5g %14.5g
+  *cfclos
+  !
+  *del, _array
+  *dim, _array, table, 1, 2
+  vget, _array(1,0), 1 
+  vget, _array(1,1), 14, freq, 0 
+  vget, _array(1,2), 14, freq, 1 
+  *cfopen, ModalTest1, uz7, , append
+  *vwrite, _array(1,0), _array(1,1), _array(1,2)  
+  %14.5g %14.5g %14.5g
+  *cfclos
+  !
+  *del, _array
+  *dim, _array, table, 1, 2
+  vget, _array(1,0), 1 
+  vget, _array(1,1), 15, freq, 0 
+  vget, _array(1,2), 15, freq, 1 
+  *cfopen, ModalTest1, uz8, , append
+  *vwrite, _array(1,0), _array(1,1), _array(1,2)  
+  %14.5g %14.5g %14.5g
+  *cfclos
+  finish
+*enddo
+

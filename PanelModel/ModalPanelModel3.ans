@@ -1,0 +1,45 @@
+!
+! Resume the run
+!
+resume,'PanelModel2_mesh','db','',,
+/filname, ModalPanelModel3, 0
+!
+/prep7
+!
+! Change ring material properties
+!
+mat_ring = 4
+E_ring = 10e6
+nu_ring = 0.3
+rho_ring = 1000
+mp, ex, mat_ring, E_ring
+mp, nuxy, mat_ring, nu_ring
+mp, dens, mat_ring, rho_ring
+!
+! Apply boundary conditions
+!
+nsel, s, loc, z, panel_thick/2+ring_thick/2 
+d, all, all, 0   
+nsel, s, loc, z, -(panel_thick/2+ring_thick/2)  
+d, all, all, 0   
+allsel
+finish
+!
+! Modal solution
+!
+/solu
+antype, modal
+modopt, lanb, 30, , , , 
+lumpm, off
+pstres, off
+outpr, all
+save, ModalPanelModel3, db
+solve
+finish 
+/solu
+expass, on
+mxpand, 30, , , , , 
+outpr, all
+outres, all
+solve
+finish

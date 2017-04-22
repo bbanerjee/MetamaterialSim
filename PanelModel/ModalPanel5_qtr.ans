@@ -1,0 +1,140 @@
+!
+! Resume the run
+!
+resume,'PanelModel3_mesh','db','',,
+/filname, ModalPanel5_qtr, 0
+!
+/prep7
+!
+! Change Ball density  (lead ball)
+!
+E_ball = 207e9
+nu_ball = 0.3
+rho_ball = 11350
+mp, ex, mat_ball, E_ball
+mp, nuxy, mat_ball, nu_ball
+mp, dens, mat_ball, rho_ball
+!
+! Change Epoxy matrix parameters
+!
+E_matrix = 5.15e9
+nu_matrix = 0.368
+rho_matrix = 1180
+mp, ex, mat_matrix, E_matrix
+mp, nuxy, mat_matrix, nu_matrix
+mp, dens, mat_matrix, rho_matrix
+!
+! Change the Silicone coating to matrix
+!
+mp, ex, mat_coating, E_matrix
+mp, nuxy, mat_coating, nu_matrix
+mp, dens, mat_coating, rho_matrix
+!
+! Change ring material properties
+!
+mat_ring = 4
+E_ring = 0.25e6
+nu_ring = 0.45
+rho_ring = 1200
+mp, ex, mat_ring, E_ring
+mp, nuxy, mat_ring, nu_ring
+mp, dens, mat_ring, rho_ring
+allsel
+finish
+!
+! Modal solution
+!
+/solu
+antype, modal
+modopt, lanb, 2000, 1, 6000, , 
+resvec, on
+lumpm, off
+pstres, off
+outpr, all
+!
+! Apply boundary conditions
+!
+!
+!  Fix the rings
+!
+nsel, s, loc, z, panel_thick/2+ring_thick/4 
+d, all, uz, 0   
+nsel, s, loc, z, -(panel_thick/2+ring_thick/4)  
+d, all, uz, 0   
+!
+!  Fix the symmetry boundaries
+!
+nsel, s, loc, x, 0.0
+d, all, ux, 0
+nsel, s, loc, y, 0.0
+d, all, uy, 0
+allsel
+!
+! Apply a distributed load on the surface
+!
+tube_dia = 8.9e-2
+local, 100, 1, 0, 0, 0
+csys, 100
+nsel, s, loc, z, panel_thick/2
+nsel, r, loc, x, 0, tube_dia/2 
+f, all, fz, 1.0e-2
+csys, 0
+allsel
+save, ModalPanel5_qtr, db
+!
+solve
+finish 
+!
+! Expansion pass
+!
+/solu
+expass, on
+mxpand, , 1, 6000, , , 
+outpr, all
+outres, all
+solve
+finish
+!
+!  Harmonic analysis (mode superposition)
+!
+/solu
+antype, harmic
+!hropt, full, , , , 
+hropt, msup, , , , 
+hrout, , , 
+resvec, on
+nsubst, 200
+harfrq, 1, 2200
+!
+! Apply boundary conditions
+!
+!
+!  Fix the rings
+!
+nsel, s, loc, z, panel_thick/2+ring_thick/4 
+d, all, uz, 0   
+nsel, s, loc, z, -(panel_thick/2+ring_thick/4)  
+d, all, uz, 0   
+!
+!  Fix the symmetry boundaries
+!
+nsel, s, loc, x, 0.0
+d, all, ux, 0
+nsel, s, loc, y, 0.0
+d, all, uy, 0
+allsel
+!
+! Apply a distributed load on the surface
+!
+tube_dia = 8.9e-2
+local, 100, 1, 0, 0, 0
+csys, 100
+nsel, s, loc, z, panel_thick/2
+nsel, r, loc, x, 0, tube_dia/2 
+f, all, fz, 1.0e-2
+csys, 0
+allsel
+save, ModalPanel5_qtr, db
+!
+solve
+finish

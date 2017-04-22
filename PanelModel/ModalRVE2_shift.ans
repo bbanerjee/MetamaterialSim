@@ -1,0 +1,241 @@
+!
+!  Model of RVE with coated ball
+!
+/filname, ModalRVE2_shift, 0
+/prep7
+!
+! Element types
+!
+!
+! Steel ball
+!
+type_ball = 1
+real_ball = 1
+et, type_ball, solid186   ! Steel ball
+keyopt, type_ball, 2, 0   ! Uniform reduced integration
+keyopt, type_ball, 3, 0   ! Structural solid
+keyopt, type_ball, 6, 0   ! Pure displacement formulation
+keyopt, type_ball, 10, 0  ! No initial stress
+r, real_ball
+!
+! Silicone coating
+!
+type_coating = 2
+real_coating = 2
+et, type_coating, solid186   ! Silicone coating
+keyopt, type_coating, 2, 0   ! Uniform reduced integration
+keyopt, type_coating, 3, 0   ! Structural solid
+keyopt, type_coating, 6, 1   ! Mixed formulation
+keyopt, type_coating, 10, 0  ! No initial stress
+r, real_coating
+!
+! Epoxy matrix
+!
+type_matrix = 3
+real_matrix = 3
+et, type_matrix, solid186   ! Expoxt matrix
+keyopt, type_matrix, 2, 0   ! Uniform reduced integration
+keyopt, type_matrix, 3, 0   ! Structural solid
+keyopt, type_matrix, 6, 0   ! Pure displacement formulation
+keyopt, type_matrix, 10, 0  ! No initial stress
+r, real_matrix
+!
+! Material parameters
+!
+! Steel ball
+!
+mat_ball = 1
+E_ball = 206.96e9
+nu_ball = 0.3
+rho_ball = 7780
+mp, ex, mat_ball, E_ball
+mp, nuxy, mat_ball, nu_ball
+mp, dens, mat_ball, rho_ball
+!
+! Silicone coating
+!
+mat_coating = 2
+E_coating = 1.175e5
+nu_coating = 0.469
+rho_coating = 1300
+mp, ex, mat_coating, E_coating
+mp, nuxy, mat_coating, nu_coating
+mp, dens, mat_coating, rho_coating
+!
+! Epoxy matrix
+!
+mat_matrix = 3
+E_matrix = 4.35e9
+nu_matrix = 0.368
+rho_matrix = 1180
+mp, ex, mat_matrix, E_matrix
+mp, nuxy, mat_matrix, nu_matrix
+mp, dens, mat_matrix, rho_matrix
+!
+! Geometry parameters
+!
+panel_len = 23.0e-3
+panel_thick = 23.0e-3
+ball_dia = 10.0e-3
+coating_dia = 15.5e-3
+!
+! Create geometry
+!
+!
+!  First create keypoints for the block
+!
+k, 1, -panel_len/2, -panel_len/2, -panel_thick/2
+k, 2,  panel_len/2, -panel_len/2, -panel_thick/2
+k, 3,  panel_len/2,  panel_len/2, -panel_thick/2
+k, 4, -panel_len/2,  panel_len/2, -panel_thick/2
+k, 5, -panel_len/2, -panel_len/2,  panel_thick/2
+k, 6,  panel_len/2, -panel_len/2,  panel_thick/2
+k, 7,  panel_len/2,  panel_len/2,  panel_thick/2
+k, 8, -panel_len/2,  panel_len/2,  panel_thick/2
+!
+! Create two halves of the block
+!
+block, -panel_len/2, panel_len/2, -panel_len/2, panel_len/2, -panel_thick/2, 0
+*get, vol_blk_left, volu, 0, num, max
+block, -panel_len/2, panel_len/2, -panel_len/2, panel_len/2, 0, panel_thick/2
+*get, vol_blk_right, volu, 0, num, max
+vatt, mat_matrix, real_matrix, type_matrix
+!
+! Create keypoint for the coating center and the coating
+!
+vsel, none
+coating_cen_x = 0.0
+k, 100, coating_cen_x, 0.0, 0.0
+sph4, coating_cen_x, 0.0, coating_dia/2
+*get, vol_coating, volu, 0, num, max
+vatt, mat_coating, real_coating, type_coating
+vsel, all
+!
+! Subtract coating from block
+!
+numstr, volu, 4
+vsbv, vol_blk_left, vol_coating, , delete, keep 
+vsbv, vol_blk_right, vol_coating, , delete, keep
+vsel, u, mat, , 1, 2
+vatt, mat_matrix, real_matrix, type_matrix
+!
+! Create keypoint for the ball center and the ball
+!
+vsel, none
+ball_cen_x = (coating_dia/2-1.1*ball_dia/2)
+k, 200, ball_cen_x, 0.0, 0.0
+sph4, ball_cen_x, 0.0, ball_dia/2
+*get, vol_ball, volu, 0, num, max
+vatt, mat_ball, real_ball, type_ball
+vsel, all
+!
+! Subtract the ball from the coating
+!
+numstr, volu, 7
+vsbv, vol_coating, vol_ball, , delete, keep
+allsel
+!
+! Glue everything
+!
+vglue, all
+!
+! Now that everything is back to square one, set the attributes of the
+! volumes again
+!
+! Select the outermost volume
+!
+asel, s, loc, x, panel_len/2
+vsla, s, 0
+vatt, mat_matrix, real_matrix, type_matrix
+!
+! Select the coating
+!
+allsel
+csys, 2 ! Spherical coordinate system
+asel, s, loc, x, coating_dia/2
+vsla, s, 0
+vsel, u, mat, , mat_matrix
+vatt, mat_coating, real_coating, type_coating
+csys, 0
+!
+! Select the ball
+!
+allsel
+vsel, u, mat, , mat_matrix
+vsel, u, mat, , mat_coating
+vatt, mat_ball, real_ball, type_ball
+allsel
+!
+! Mesh the volumes
+!
+smrtsize, 1
+mopt, amesh, defa
+mopt, qmesh, defa
+mopt, vmesh, defa
+mopt, timp, 1
+mopt, pyra, on
+mopt, aord, 0
+mopt, split, 1
+mshkey, 0
+mshmid, 0
+mshpattern, 0
+keyw, accept, 0
+mshape, 0, 2d
+mshape, 1, 3d
+vmesh,all
+allsel
+finish
+!
+! Modal solution
+!
+/solu
+antype, modal
+modopt, lanb, 500, , , , 
+lumpm, off
+pstres, off
+resvec, on
+!
+! Apply displacement bcs
+!
+nsel, s, loc, x, -panel_len/2.0
+d, all, ux, 0
+nsel, s, loc, y, -panel_len/2.0
+d, all, uy, 0
+!
+! Apply a force at the center of the face
+!
+nsel, s, loc, z, -panel_thick/2
+local, 100, 1, 0, 0, -panel_thick/2
+csys, 100
+nsel, r, loc, x, 0, panel_len/10
+f, all, fz, 1.0e-2
+csys, 0
+allsel
+outpr, all
+solve
+save, ModalRVE2_shift, db
+finish 
+!
+! Expansion pass
+!
+/solu
+expass, on
+mxpand, 500, , , , , 
+outpr, all
+outres, all
+solve
+finish
+!
+!  Harmonic analysis (mode superposition)
+!
+/solu
+antype, harmic
+!hropt, full, , , , 
+hropt, msup, , , , 
+hrout, , , 
+resvec, on
+nsubst, 200
+harfrq, 0, 4000
+solve
+save, ModalRVE2_shift_harm, db
+finish

@@ -1,0 +1,278 @@
+!
+!  Model of panel with regularly distributed coated balls
+!
+/filname, PanelModelEpoxy, 0
+/prep7
+!
+! Element types
+!
+!
+! Steel ball
+!
+type_ball = 1
+real_ball = 1
+et, type_ball, solid186   ! Steel ball
+keyopt, type_ball, 2, 0   ! Uniform reduced integration
+keyopt, type_ball, 3, 0   ! Structural solid
+keyopt, type_ball, 6, 0   ! Pure displacement formulation
+keyopt, type_ball, 10, 0  ! No initial stress
+r, real_ball
+!
+! Silicone coating
+!
+type_coating = 2
+real_coating = 2
+et, type_coating, solid186   ! Silicone coating
+keyopt, type_coating, 2, 0   ! Uniform reduced integration
+keyopt, type_coating, 3, 0   ! Structural solid
+keyopt, type_coating, 6, 1   ! Mixed formulation
+keyopt, type_coating, 10, 0  ! No initial stress
+r, real_coating
+!
+! Epoxy matrix
+!
+type_matrix = 3
+real_matrix = 3
+et, type_matrix, solid186   ! Expoxt matrix
+keyopt, type_matrix, 2, 0   ! Uniform reduced integration
+keyopt, type_matrix, 3, 0   ! Structural solid
+keyopt, type_matrix, 6, 0   ! Pure displacement formulation
+keyopt, type_matrix, 10, 0  ! No initial stress
+r, real_matrix
+!
+! Rubber ring (should be replaced with a foundation stiffness)
+!
+type_ring = 4
+real_ring = 4
+et, type_ring, solid186   ! Rubber ring
+keyopt, type_ring, 2, 0   ! Uniform reduced integration
+keyopt, type_ring, 3, 0   ! Structural solid
+keyopt, type_ring, 6, 1   ! Mixed formulation
+keyopt, type_ring, 10, 0  ! No initial stress
+r, real_ring
+!
+! Material parameters
+!
+! Steel ball
+!
+mat_ball = 1
+E_ball = 207e9
+nu_ball = 0.3
+rho_ball = 7780
+mp, ex, mat_ball, E_ball
+mp, nuxy, mat_ball, nu_ball
+mp, dens, mat_ball, rho_ball
+!
+! Silicone coating
+!
+mat_coating = 2
+E_coating = 1.175e5
+nu_coating = 0.469
+rho_coating = 1300
+mp, ex, mat_coating, E_coating
+mp, nuxy, mat_coating, nu_coating
+mp, dens, mat_coating, rho_coating
+!
+! Epoxy matrix
+!
+mat_matrix = 3
+E_matrix = 4.35e9
+nu_matrix = 0.368
+rho_matrix = 1180
+mp, ex, mat_matrix, E_matrix
+mp, nuxy, mat_matrix, nu_matrix
+mp, dens, mat_matrix, rho_matrix
+!
+! Rubber ring (should be replaced with a foundation stiffness)
+!
+mat_ring = 4
+E_ring = 1e9
+nu_ring = 0.49
+rho_ring = 1000
+mp, ex, mat_ring, E_ring
+mp, nuxy, mat_ring, nu_ring
+mp, dens, mat_ring, rho_ring
+!
+! Geometry parameters
+!
+panel_len = 12.7e-2
+panel_thick = 1.9e-2
+ball_dia = 6.0e-3
+coating_dia = 15.0e-3
+!
+tube_dia = 8.9e-2
+!
+ring_dia = 10.5e-2
+ring_thick = 7e-3
+!
+num_rows = 9
+num_rows_1 = 5
+num_rows_2 = num_rows_1 - 1
+num_cols = 8
+num_cols_1 = 8
+num_cols_2 = num_cols_1 - 1
+row_start_dist_1 = 8.0e-3
+row_start_dist_2 = row_start_dist_1+1.05*coating_dia*sin(60*3.14159/180)
+col_start_dist_1 = 8.0e-3
+col_start_dist_2 = col_start_dist_1+coating_dia*sin(30*3.14159/180)
+!
+! Create geometry
+!
+!
+! Create local system for the ball centers  and create the coating
+!
+row_width_1 = panel_len - 2*row_start_dist_1
+row_width_2 = panel_len - 2*(row_start_dist_2)
+col_width_1 = panel_len - 2*col_start_dist_1
+col_width_2 = panel_len - 2*(col_start_dist_2)
+row_inc_1 = row_width_1/(num_rows_1-1)
+row_inc_2 = row_width_2/(num_rows_2-1)
+col_inc_1 = col_width_1/(num_cols_1-1)
+col_inc_2 = col_width_2/(num_cols_2-1)
+
+k_num = 100
+*do, jj, 1, num_cols_1
+   xloc =  col_start_dist_1+(jj-1)*col_inc_1
+   *do, ii, 1, num_rows_1
+       yloc = row_start_dist_1+(ii-1)*row_inc_1
+       k_num = k_num + 1
+!       local, k_num, 2, xloc, yloc, 0
+!       sph4, xloc, yloc, ball_dia/2, coating_dia/2
+   *enddo
+*enddo
+k_num = 200
+*do, jj, 1, num_cols_2
+   xloc = col_start_dist_2+(jj-1)*col_inc_2
+   *do, ii, 1, num_rows_2
+       yloc = row_start_dist_2+(ii-1)*row_inc_2
+       k_num = k_num + 1
+!       local, k_num, 2, xloc, yloc, 0
+!       sph4, xloc, yloc, ball_dia/2, coating_dia/2
+   *enddo
+*enddo
+csys,0
+vsel, none
+!
+! Create left half of the block
+!
+block, 0, panel_len, 0, panel_len, -panel_thick/2, 0
+!
+! Create the right half of the block
+!
+block, 0, panel_len, 0, panel_len, 0, panel_thick/2
+!
+!  Create the areas over which the load is applied and measurement is made
+!
+k, 1000, panel_len/2, panel_len/2, panel_thick/2
+k, 1001, panel_len/2, panel_len/2, -panel_thick/2
+lsel, none
+asel, none
+circle, 1000, tube_dia/2
+al, all
+asel, a, loc, z, panel_thick/2
+aptn, all
+!
+lsel, none
+asel, none
+circle, 1001, tube_dia/2
+al, all
+asel, a, loc, z, panel_thick/2
+aptn, all
+!
+! Glue everything
+!
+vglue, all
+allsel
+numcmp, volu
+!
+! Delete the coating+balls from the block 
+!
+!vptn, all
+!vglue, all
+!numcmp, volu
+!
+!  Create the rings
+!
+lsel, none
+asel, none
+circle, 1000, ring_dia/2
+circle, 1000, ring_dia/2+ring_thick/2
+al, all
+vext, all, , , , , ring_thick/2
+!
+lsel, none
+asel, none
+circle, 1001, ring_dia/2
+circle, 1001, ring_dia/2+ring_thick/2
+al, all
+vext, all, , , , , -ring_thick/2
+allsel
+!
+! Glue everything
+!
+vglue, all
+!
+! Set the attributes of the ball and the coating for future use
+!
+!k_num = 100
+!*do, jj, 1, num_cols_1
+!   *do, ii, 1, num_rows_1
+!       k_num = k_num + 1
+!       csys, k_num          ! switch to local spherical coordinate system
+!       asel, s, loc, x, coating_dia/2
+!       vsla, s, 0
+!       vatt, mat_coating, real_coating, type_coating
+!   *enddo
+!*enddo
+!k_num = 200
+!*do, jj, 1, num_cols_2
+!   *do, ii, 1, num_rows_2
+!       k_num = k_num + 1
+!       csys, k_num
+!       asel, s, loc, x, coating_dia/2
+!       vsla, s, 0
+!       vatt, mat_coating, real_coating, type_coating
+!   *enddo
+!*enddo
+!allsel
+!csys, 0
+!vsel, u, mat, , mat_coating
+!vatt, mat_ball, real_ball, type_ball
+!allsel
+!
+! Set the attributes of the matrix
+!
+asel, s, loc, x, panel_len
+vsla, s, 0
+vatt, mat_matrix, real_matrix, type_matrix
+allsel
+!
+! Set the attributes of the ring
+!
+asel, s, loc, z, panel_thick/2+ring_thick/2
+vsla, s, 0
+vatt, mat_ring, real_ring, type_ring
+asel, s, loc, z, -panel_thick/2-ring_thick/2
+vsla, s, 0
+vatt, mat_ring, real_ring, type_ring
+allsel
+save, PanelModelEpoxy_geom, db
+!
+! Mesh the volumes
+!
+smrtsize, 4
+mopt, amesh, defa
+mopt, qmesh, defa
+mopt, vmesh, defa
+mopt, timp, 1
+mopt, pyra, on
+mopt, aord, 0
+mopt, split, 1
+mshkey, 0
+mshmid, 0
+mshpattern, 0
+keyw, accept, 0
+mshape, 0, 2d
+mshape, 1, 3d
+vmesh,all
+save, PanelModelEpoxy_mesh, db

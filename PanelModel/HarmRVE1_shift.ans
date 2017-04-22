@@ -1,0 +1,41 @@
+!
+! Resume the run
+!
+resume,'ModalRVE1_shift','db','',,
+/filname, ModalRVE1_shift, 0
+!
+!
+! Modal solution
+!
+/solu
+!
+! Apply displacement bcs
+!
+nsel, s, loc, x, -panel_len/2.0
+d, all, ux, 0
+nsel, s, loc, y, -panel_len/2.0
+d, all, uy, 0
+!
+! Apply a force at the center of the face
+!
+nsel, s, loc, z, -panel_thick/2
+local, 100, 1, 0, 0, -panel_thick/2
+csys, 100
+nsel, r, loc, x, panel_len/10
+f, all, fz, 1.0e-2
+csys, 0
+allsel
+!
+!  Harmonic analysis (mode superposition)
+!
+/solu
+antype, harmic
+!hropt, full, , , , 
+hropt, msup, , , , 
+hrout, , , 
+!resvec, on
+nsubst, 200
+harfrq, 0, 4000
+solve
+save, ModalRVE1_shift, db
+finish

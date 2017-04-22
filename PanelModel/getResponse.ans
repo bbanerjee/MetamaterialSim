@@ -1,0 +1,67 @@
+RESUME,'ModalPanel3_qtr_damp','db','',,  
+/post26 
+FILE,  'ModalPanel3_qtr_damp','rfrq',' '   
+NUMVAR,100, 
+nsol, 12, 72535, u, z, uz_2 
+STORE,
+nsol, 13, 72543, u, z, uz_3 
+store   
+nsol, 14, 72085, u, z, uz_4 
+!plvar, 12, 13, 14
+! Save time history variables to file ModalPanel3_qtr_damp.uz72085   
+*CREATE,scratch,gui 
+*DEL,_P26_EXPORT
+*DIM,_P26_EXPORT,TABLE,8044,2
+VGET,_P26_EXPORT(1,0),1 
+VGET,_P26_EXPORT(1,1),14,,0 
+VGET,_P26_EXPORT(1,2),14,,1 
+/OUTPUT,'ModalPanel3_qtr_damp','uz72085','.' 
+*VWRITE,'FREQ','uz_4',' '   
+%14C %14C %14C  
+*VWRITE,' ','REAL','IMAGINARY'  
+%14C %14C %14C  
+*VWRITE,_P26_EXPORT(1,0),_P26_EXPORT(1,1),_P26_EXPORT(1,2)  
+%14.5G %14.5G %14.5G
+/OUTPUT,TERM
+*END
+/INPUT,scratch,gui  
+! End of time history save  
+! Save time history variables to file ModalPanel3_qtr_damp.uz72543   
+*CREATE,scratch,gui 
+*DEL,_P26_EXPORT
+*DIM,_P26_EXPORT,TABLE,8044,2
+VGET,_P26_EXPORT(1,0),1 
+VGET,_P26_EXPORT(1,1),13,,0 
+VGET,_P26_EXPORT(1,2),13,,1 
+/OUTPUT,'ModalPanel3_qtr_damp','uz72543','.' 
+*VWRITE,'FREQ','uz_3',' '   
+%14C %14C %14C  
+*VWRITE,' ','REAL','IMAGINARY'  
+%14C %14C %14C  
+*VWRITE,_P26_EXPORT(1,0),_P26_EXPORT(1,1),_P26_EXPORT(1,2)  
+%14.5G %14.5G %14.5G
+/OUTPUT,TERM
+*END
+/INPUT,scratch,gui  
+! End of time history save  
+! Save time history variables to file ModalPanel3_qtr_damp.uz72535   
+*CREATE,scratch,gui 
+*DEL,_P26_EXPORT
+*DIM,_P26_EXPORT,TABLE,8044,2
+VGET,_P26_EXPORT(1,0),1 
+VGET,_P26_EXPORT(1,1),12,,0 
+VGET,_P26_EXPORT(1,2),12,,1 
+/OUTPUT,'ModalPanel3_qtr_damp','uz72535','.' 
+*VWRITE,'FREQ','uz_2',' '   
+%14C %14C %14C  
+*VWRITE,' ','REAL','IMAGINARY'  
+%14C %14C %14C  
+*VWRITE,_P26_EXPORT(1,0),_P26_EXPORT(1,1),_P26_EXPORT(1,2)  
+%14.5G %14.5G %14.5G
+/OUTPUT,TERM
+*END
+/INPUT,scratch,gui  
+! End of time history save  
+FINISH  
+! /EXIT,NOSAV   
+

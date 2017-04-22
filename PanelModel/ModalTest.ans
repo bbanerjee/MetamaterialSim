@@ -1,0 +1,131 @@
+!
+!  Model of RVE with coated ball
+!
+/filname, ModalTest, 0
+/prep7
+!
+! Element types
+!
+!
+! Epoxy matrix
+!
+type_matrix = 3
+real_matrix = 3
+et, type_matrix, solid186   ! Expoxt matrix
+keyopt, type_matrix, 2, 0   ! Uniform reduced integration
+keyopt, type_matrix, 3, 0   ! Structural solid
+keyopt, type_matrix, 6, 0   ! Pure displacement formulation
+keyopt, type_matrix, 10, 0  ! No initial stress
+r, real_matrix
+!
+! Material parameters
+!
+! Epoxy matrix
+!
+mat_matrix = 3
+E_matrix = 4.35e9
+nu_matrix = 0.368
+!rho_matrix = 1180
+rho_matrix = 8000
+mp, ex, mat_matrix, E_matrix
+mp, nuxy, mat_matrix, nu_matrix
+mp, dens, mat_matrix, rho_matrix
+!
+! Geometry parameters
+!
+panel_len = 23.0e-3
+panel_thick = 23.0e-3
+!
+! Create geometry
+!
+!
+! Create the block
+!
+block, -panel_len/2, panel_len/2, -panel_len/2, panel_len/2, -panel_thick/2, panel_thick/2
+vatt, mat_matrix, real_matrix, type_matrix
+!
+! Mesh the volume
+!
+smrtsize, 1
+mopt, amesh, defa
+mopt, qmesh, defa
+mopt, vmesh, defa
+mopt, timp, 1
+mopt, pyra, on
+mopt, aord, 0
+mopt, split, 1
+mshkey, 0
+mshmid, 0
+mshpattern, 0
+keyw, accept, 0
+mshape, 0, 2d
+mshape, 1, 3d
+vmesh,all
+allsel
+finish
+!
+! Modal solution
+!
+/solu
+antype, modal
+modopt, lanb, 300, , , , 
+lumpm, off
+pstres, off
+!resvec, on
+outpr, all
+!
+! Apply pseudosupports
+!
+!d,,,support
+!
+! Apply a force at the center of the face
+!
+local, 100, 1, 0, 0, -panel_thick/2
+csys, 100
+nsel, s, loc, z, 0
+nsel, r, loc, x, 0, panel_len/10
+f, all, fz, 1.0e-2
+csys, 0
+allsel
+!
+save
+solve
+finish 
+!
+! Expansion pass
+!
+!/solu
+!expass, on
+!mxpand, 500, , , , , 
+!outpr, all
+!outres, all
+!solve
+!finish
+!
+!  Harmonic analysis (mode superposition)
+!
+/solu
+antype, harmic
+!hropt, full, , , , 
+hropt, msup, , , , 
+hrout, , , 
+!resvec, on
+!
+! Apply pseudosupports
+!
+!d,,,support
+!
+! Apply a force at the center of the face
+!
+local, 100, 1, 0, 0, -panel_thick/2
+csys, 100
+nsel, s, loc, z, 0
+nsel, r, loc, x, 0, panel_len/10
+f, all, fz, 1.0e-2
+csys, 0
+allsel
+nsubst, 300
+harfrq, 0, 30000
+save
+solve
+finish
